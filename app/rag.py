@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
 
 # -----------------------------------------------------------------------------
@@ -278,7 +278,7 @@ def fallback_response(message: str, skills: List[Dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Knowledge base + Chroma vector store (for RAG)
+# Knowledge base + Chroma vector store (for RAG, *lightweight* on Render)
 # ---------------------------------------------------------------------------
 
 def ensure_kb_file() -> None:
@@ -332,14 +332,22 @@ def ensure_kb_file() -> None:
     )
 
 
-def build_vectorstore() -> Chroma:
+def build_vectorstore() -> Optional[Chroma]:
     """
-    Build or load a Chroma vector store from the skills knowledge base,
-    using local SentenceTransformer embeddings (no external API calls).
+    Build or load a Chroma vector store from the skills knowledge base
+    using OpenAIEmbeddings.
+
+    IMPORTANT for Render:
+    - Only builds if OPENAI_API_KEY is set.
+    - Does NOT load any heavy local models, so it fits in 512Mi.
     """
+    if not os.getenv("OPENAI_API_KEY"):
+        # No key -> don't build vectorstore, run in fallback-only mode.
+        return None
+
     ensure_kb_file()
 
-    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = OpenAIEmbeddings()
 
     if any(CHROMA_DIR.iterdir()):
         return Chroma(
@@ -371,8 +379,8 @@ def build_vectorstore() -> Chroma:
 _VECTORSTORE: Optional[Chroma] = None
 
 
-def get_vectorstore() -> Chroma:
-    """Return a singleton Chroma vector store instance."""
+def get_vectorstore() -> Optional[Chroma]:
+    """Return a singleton Chroma vector store instance or None."""
     global _VECTORSTORE
     if _VECTORSTORE is None:
         _VECTORSTORE = build_vectorstore()
@@ -380,24 +388,26 @@ def get_vectorstore() -> Chroma:
 
 
 # ---------------------------------------------------------------------------
-# OpenAI + RAG path (only used when use_llm=True and key is set)
+# OpenAI + (optional) RAG path
 # ---------------------------------------------------------------------------
 
 def llm_analyze_with_rag(message: str) -> Tuple[str, List[Dict]]:
     """
-    Use OpenAI Chat Completions + Chroma RAG to analyze the message.
+    Use OpenAI Chat Completions + optional Chroma RAG to analyze the message.
     Returns (assistant_response, skills_list).
     """
+    context = ""
     vectorstore = get_vectorstore()
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
-    docs = retriever.get_relevant_documents(message)
-    context = "\n\n".join(d.page_content for d in docs)
+    if vectorstore is not None:
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+        docs = retriever.get_relevant_documents(message)
+        context = "\n\n".join(d.page_content for d in docs)
 
     system_prompt = """
 You are an AI career and skills assistant that BOTH chats naturally and extracts skills.
 
 Your job for each user message:
-1. Read the user message and the skills knowledge base context.
+1. Read the user message and the skills knowledge base context (if provided).
 2. Produce a friendly, concise response that:
    - acknowledges what the user said
    - highlights the key skills you see
@@ -427,7 +437,7 @@ VERY IMPORTANT:
 
     client = get_openai_client()
     completion = client.chat.completions.create(
-        model="gpt-4.1-mini",  # or gpt-4o-mini / gpt-3.5-turbo etc.
+        model="gpt-4.1-mini",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},
@@ -444,7 +454,6 @@ VERY IMPORTANT:
         if not isinstance(skills, list):
             skills = []
     except Exception:
-        # If JSON parsing fails, just return the raw text and no structured skills
         assistant_response = raw
         skills = []
 
@@ -463,7 +472,7 @@ def analyze_message(message: str, use_llm: bool = False) -> Tuple[str, List[Dict
 
     Behavior:
       - If use_llm is True AND OPENAI_API_KEY is set:
-          Try OpenAI + RAG. On any error, fall back to local engine.
+          Try OpenAI + (optional) RAG. On any error, fall back to local engine.
       - Otherwise:
           Use local smart fallback engine only.
     """
@@ -474,11 +483,6 @@ def analyze_message(message: str, use_llm: bool = False) -> Tuple[str, List[Dict
             print(f"LLM/RAG failed, falling back to local engine: {e}")
 
     # Fallback-only path (also used when key not set or use_llm=False)
-    try:
-        get_vectorstore()
-    except Exception as e:
-        print(f"Vectorstore init failed (continuing with fallback only): {e}")
-
     skills = fallback_extract_skills(message)
     reply = fallback_response(message, skills)
     return reply, skills
