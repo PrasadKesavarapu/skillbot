@@ -1,0 +1,214 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.app-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.app-header {
+  text-align: center;
+}
+
+.app-header h1 {
+  margin-bottom: 0.25rem;
+}
+
+.chat-container {
+  flex: 1;
+  background: #020617;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.message-row {
+  display: flex;
+  margin-bottom: 0.25rem;
+}
+
+.message-row.user {
+  justify-content: flex-end;
+}
+
+.message-row.bot {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+.user .bubble {
+  background: #4f46e5;
+  color: white;
+  border-bottom-right-radius: 0.1rem;
+}
+
+.bot .bubble {
+  background: #111827;
+  color: #e5e7eb;
+  border-bottom-left-radius: 0.1rem;
+}
+
+.skills-panel,
+.profile-panel {
+  background: #020617;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.skills-panel h2,
+.profile-panel h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-chip {
+  padding: 0.25rem 0.5rem;
+  background: #1f2937;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.skill-chip strong {
+  font-size: 0.85rem;
+}
+
+.skill-meta {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* Profile section */
+
+.profile-roles {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.profile-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-skill-row {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  background: #020617;
+  border: 1px solid #1f2937;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Chat input */
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.chat-input textarea {
+  flex: 1;
+  resize: vertical;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.chat-input textarea:focus {
+  outline: 2px solid #4f46e5;
+}
+
+.chat-input button {
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-input button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .bubble {
+    max-width: 100%;
+  }
+
+  .chat-input {
+    flex-direction: column;
+  }
+
+  .chat-input button {
+    width: 100%;
+    height: 2.5rem;
+  }
+
+  .profile-skill-row {
+    flex-direction: column;
+  }
+}
+
+.llm-toggle {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.llm-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.llm-toggle input[type="checkbox"] {
+  accent-color: #4f46e5;
+}

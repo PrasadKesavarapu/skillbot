@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skill Finder Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Skill Finder Chatbot</h1>
+      <p>Paste your text, resume bullet, or project description. I’ll identify your skills and build a live profile.</p>
+    </header>
+
+    <main class="chat-container">
+      <div id="messages" class="messages"></div>
+    </main>
+
+    <section class="skills-panel">
+      <h2>Detected Skills (last message)</h2>
+      <div id="skills-list" class="skills-list"></div>
+    </section>
+
+    <section class="profile-panel">
+      <h2>Profile So Far</h2>
+      <p id="profile-roles" class="profile-roles">
+        Keep chatting and I wll build your skill profile and suggest roles.
+      </p>
+      <div id="profile-skills" class="profile-skills"></div>
+    </section>
+
+        <div class="llm-toggle">
+      <label>
+        <input type="checkbox" id="llm-toggle" />
+        LLM Mode (if available)
+      </label>
+    </div>
+
+    <form id="chat-form" class="chat-input">
+      <textarea
+        id="message-input"
+        placeholder="Describe your experience, projects, or paste a resume bullet..."
+        rows="3"
+      ></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="./script.js" defer></script>
+</body>
+</html>
